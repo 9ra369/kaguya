@@ -1,0 +1,5 @@
+{
+    "name": "default",
+    "dirs": ["hip", "geo", "render", "tex", "otls", "scripts", "packages", "ref"],
+    "extra_env": []
+}

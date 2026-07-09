@@ -1,0 +1,21 @@
+# ---- 再生成可能なもの ----
+node_modules/
+dist/
+
+# ---- マシン固有 ----
+*.lnk
+*.vbs
+Thumbs.db
+Desktop.ini
+
+# ---- ローカル状態 (マシン固有パスを含む。example 版を追跡する) ----
+config/apps.json
+config/projects.json
+config/settings.json
+projects/*
+!projects/.keep
+icons/projects/*
+!icons/projects/.keep
+
+# ---- ログ ----
+npm-debug.log*

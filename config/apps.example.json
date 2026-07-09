@@ -1,0 +1,9 @@
+[
+  {
+    "id": "houdini",
+    "name": "Houdini",
+    "version": "21.0.440",
+    "icon": "icons/apps/houdini.png",
+    "exe": "C:/Program Files/Side Effects Software/Houdini 21.0.440/bin/houdini.exe"
+  }
+]

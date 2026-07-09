@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kaguya</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">KAGUYA</span>
+      <span class="brand-sub">DCC LAUNCHER</span>
+      <span class="brand-root" id="rootPath" title=""></span>
+    </div>
+
+    <!-- ショット選択(プロジェクトの左隣・shots 設定があるときのみ表示) -->
+    <div class="shot-select" id="shotSelect" hidden>
+      <label class="shot-label" for="shotDropdown">SHOT</label>
+      <select id="shotDropdown"></select>
+    </div>
+
+    <!-- プロジェクト選択(右上) -->
+    <div class="project-select" id="projectSelect">
+      <button class="project-btn" id="projectBtn" aria-haspopup="listbox" aria-expanded="false">
+        <img class="project-icon" id="projectBtnIcon" alt="" />
+        <span class="project-name" id="projectBtnName">Project</span>
+        <span class="chev">▾</span>
+      </button>
+      <ul class="project-menu" id="projectMenu" role="listbox" hidden></ul>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- 左: アプリ & シーン -->
+    <section class="col-left">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="eyebrow">Applications</span>
+          <button class="mini-btn" id="newProjectBtn">+ New Project</button>
+        </div>
+        <div class="app-grid" id="appGrid"></div>
+      </div>
+
+      <div class="panel grow">
+        <div class="panel-head">
+          <span class="eyebrow">Scenes</span>
+          <span class="hint" id="sceneDir"></span>
+        </div>
+        <ul class="scene-list" id="sceneList"></ul>
+      </div>
+    </section>
+
+    <!-- 右: 環境変数スタック(署名要素) -->
+    <section class="col-right panel">
+      <div class="panel-head">
+        <span class="eyebrow">Environment Stack</span>
+        <span class="env-actions" id="envActions" hidden>
+          <button class="mini-btn" id="openEnvJson">Open JSON</button>
+          <button class="mini-btn" id="revealEnvJson">Reveal in Explorer</button>
+        </span>
+      </div>
+
+      <div class="stack">
+        <div class="layer layer-batch">
+          <div class="layer-head">
+            <span class="layer-badge badge-batch">1 · batch</span>
+            <span class="layer-desc">dynamic — resolved by the launcher before startup</span>
+          </div>
+          <table class="env-table" id="batchTable"></table>
+          <div class="layer-file mono" id="batchPath"></div>
+        </div>
+
+        <div class="stack-arrow">▼ inherited by the child process</div>
+
+        <div class="layer layer-pkg">
+          <div class="layer-head">
+            <span class="layer-badge badge-pkg">2 · packages</span>
+            <span class="layer-desc">static — merged from package JSON after startup</span>
+          </div>
+          <div id="packagesArea"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- 新規プロジェクト作成モーダル (仕様書 §5.1) -->
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal" role="dialog" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <span class="eyebrow" id="modalTitle">New Project</span>
+        <button class="mini-btn" id="modalClose">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-col">
+          <label class="f-label">Project Name
+            <input type="text" id="fName" placeholder="PRJ_cityDemo" spellcheck="false" autocomplete="off">
+          </label>
+          <label class="f-label">Project Root
+            <div class="f-browse">
+              <input type="text" id="fRoot" placeholder="D:/projects" spellcheck="false" autocomplete="off">
+              <button class="mini-btn" id="btnBrowse">Browse…</button>
+            </div>
+          </label>
+          <div class="f-row2">
+            <label class="f-label">Template
+              <select id="fTemplate"></select>
+            </label>
+            <label class="f-label">DCC / Version
+              <select id="fApp"></select>
+            </label>
+          </div>
+          <label class="f-check">
+            <input type="checkbox" id="fCreateDirs" checked>
+            Create directories
+          </label>
+          <div class="tpl-dirs mono" id="tplDirs"></div>
+
+          <div class="f-sep">Extra Variables</div>
+          <div id="extraEnvRows"></div>
+          <button class="mini-btn" id="addEnvRow">+ Add variable</button>
+        </div>
+
+        <div class="preview-col">
+          <div class="f-sep">Preview <span class="mono preview-path" id="previewPath"></span></div>
+          <pre class="json-preview mono" id="jsonPreview"></pre>
+        </div>
+      </div>
+
+      <div class="warn-area" id="warnArea"></div>
+
+      <div class="modal-foot">
+        <button class="mini-btn" id="btnCancel">Cancel</button>
+        <button class="primary-btn" id="btnCreate" disabled>Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

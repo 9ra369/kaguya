@@ -1,0 +1,9 @@
+# テキストは自動判定で改行を正規化
+* text=auto
+
+# bat は必ず CRLF (LF だと cmd の goto ラベル等が壊れる)
+*.bat text eol=crlf
+
+# バイナリを明示
+*.png binary
+*.ico binary

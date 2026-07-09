@@ -1,0 +1,35 @@
+{
+  "name": "kaguya",
+  "version": "0.2.0",
+  "description": "Kaguya - project-aware multi-DCC launcher (batch = dynamic env / packages = static env)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win dir",
+    "dist:portable": "electron-builder --win portable",
+    "shortcut": "electron . --make-shortcut"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "dev.kurama.kaguya",
+    "productName": "Kaguya",
+    "files": [
+      "main.js",
+      "preload.js",
+      "builder.js",
+      "renderer/**",
+      "build/icon.png",
+      "build/icon.ico"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Kaguya.exe"
+    }
+  }
+}

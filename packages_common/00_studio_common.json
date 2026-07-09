@@ -1,0 +1,13 @@
+{
+    "env": [
+        {
+            "HOUDINI_BACKUP_DIR": "$HIP/backup"
+        },
+        {
+            "HOUDINI_MAX_BACKUP_FILES": "10"
+        },
+        {
+            "PYTHONPATH": "$LAUNCHER_ROOT/shared/python"
+        }
+    ]
+}
