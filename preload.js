@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("launcher", {
   openFolder: (rel) => ipcRenderer.invoke("openFolder", rel),
   openPathAbs: (abs) => ipcRenderer.invoke("openPathAbs", abs),
   showInFolder: (abs) => ipcRenderer.invoke("showInFolder", abs),
+  shotCreate: (payload) => ipcRenderer.invoke("shot:create", payload),
   pickFolder: (defaultPath) => ipcRenderer.invoke("dialog:pickFolder", defaultPath ?? null),
   // project environment builder
   builderDefaults: () => ipcRenderer.invoke("builder:defaults"),

@@ -12,7 +12,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const KAGUYA_VERSION = "0.2.0";
+const KAGUYA_VERSION = "0.3.0";
 
 // ディレクトリ区切りは OS に関係なく '/' (§3.2-1)
 const toSlash = (p) => String(p).replace(/\\/g, "/");
@@ -199,7 +199,9 @@ function createProject(ROOT, form, settings, templates, projectsJsonPath) {
     templates.find((t) => t.name === (form.template ?? "default")) ?? templates[0];
 
   // 2. ディレクトリ生成: packages は JSON の置き場なので常に作る
-  const dirs = form.createDirs ? [...new Set([...tpl.dirs, "packages"])] : ["packages"];
+  //    ショット管理有効時は shots も常に作る (走査対象のため)
+  const always = form.enableShots ? ["packages", "shots"] : ["packages"];
+  const dirs = form.createDirs ? [...new Set([...tpl.dirs, ...always])] : always;
   for (const d of dirs) fs.mkdirSync(path.join(jobPath, d), { recursive: true });
 
   // 3. package JSON (Node の writeFileSync utf-8 は BOM を付けない §3.2-4)
@@ -234,6 +236,15 @@ function createProject(ROOT, form, settings, templates, projectsJsonPath) {
     defaultApp: form.defaultApp ?? null,
     envJson: toSlash(jsonPath), // §5.2 の「環境変数」バッジ・JSON閲覧用メタ
   };
+  if (form.enableShots) {
+    // <PRJ名>_{seq}_{subscene}_{cut} 規約でフォルダ走査。
+    // 命名規約を変えたい場合は projects.json の pattern を編集する
+    entry.shots = {
+      dir: "$JOB/shots",
+      pattern: `^${name}_(?<seq>[^_]+)_(?<subscene>[^_]+)_(?<cut>[^_]+)$`,
+    };
+    entry.hipDirShot = "$SHOT_ROOT/hip";
+  }
   const idx = projects.findIndex((p) => p.id === name);
   if (idx >= 0) projects[idx] = { ...projects[idx], ...entry };
   else projects.push(entry);

@@ -19,6 +19,8 @@
     <div class="shot-select" id="shotSelect" hidden>
       <label class="shot-label" for="shotDropdown">SHOT</label>
       <select id="shotDropdown"></select>
+      <input type="text" id="newShotInput" class="shot-new-input" placeholder="PRJ_010_A_0010" spellcheck="false" hidden>
+      <button class="mini-btn" id="newShotBtn" title="Create new shot">＋</button>
     </div>
 
     <!-- プロジェクト選択(右上) -->
@@ -81,6 +83,16 @@
           </div>
           <div id="packagesArea"></div>
         </div>
+
+        <div class="stack-arrow">▼ resolved inside Houdini</div>
+
+        <div class="layer layer-runtime">
+          <div class="layer-head">
+            <span class="layer-badge badge-runtime">3 · runtime</span>
+            <span class="layer-desc">reference — resolved by Houdini itself, not set by Kaguya</span>
+          </div>
+          <table class="env-table" id="runtimeTable"></table>
+        </div>
       </div>
     </section>
   </main>
@@ -116,6 +128,10 @@
           <label class="f-check">
             <input type="checkbox" id="fCreateDirs" checked>
             Create directories
+          </label>
+          <label class="f-check">
+            <input type="checkbox" id="fShots" checked>
+            Enable shot management ($JOB/shots)
           </label>
           <div class="tpl-dirs mono" id="tplDirs"></div>
 

@@ -627,3 +627,22 @@ body {
   border-top: 1px solid var(--edge);
   margin-top: 10px;
 }
+
+/* runtime 層 (参照専用・ニュートラル配色) */
+.layer-runtime { background: rgba(214, 211, 204, 0.04); }
+.badge-runtime { background: #55585e; color: #d6d3cc; font-weight: 700; }
+.layer-runtime .env-table td.k { color: #9a9da3; }
+.env-table td.v.v-dyn { color: #6e7178; font-style: italic; }
+
+/* 新規ショットのインライン入力 */
+.shot-new-input {
+  background: var(--ink);
+  border: 1px solid var(--ember);
+  border-radius: 5px;
+  color: var(--bone);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 8px;
+  width: 180px;
+  outline: none;
+}

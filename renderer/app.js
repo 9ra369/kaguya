@@ -113,6 +113,7 @@ function renderShotSelect() {
     return;
   }
   wrap.hidden = false;
+  $("newShotBtn").hidden = info.source === "json"; // shots.json 管理時は GUI 作成不可
   dd.innerHTML = "";
 
   const none = document.createElement("option");
@@ -217,6 +218,21 @@ function renderEnvStack() {
 
   // ビルダー生成プロジェクトなら JSON アクションを表示 (§5.2)
   $("envActions").hidden = !d.envJson;
+
+  // layer 3: runtime (参照専用)
+  const rt = $("runtimeTable");
+  rt.innerHTML = "";
+  for (const { key, value, dynamic } of d.runtime ?? []) {
+    const tr = document.createElement("tr");
+    const k = document.createElement("td");
+    const v = document.createElement("td");
+    k.className = "k";
+    v.className = "v" + (dynamic ? " v-dyn" : "");
+    k.textContent = key;
+    v.textContent = value;
+    tr.append(k, v);
+    rt.appendChild(tr);
+  }
 
   // layer 1: batch
   const table = $("batchTable");
@@ -444,6 +460,7 @@ function collectForm(overwrite = false) {
     dcc: "houdini", // 現状 Houdini のみ。将来は fApp から DCC 種別を引く
     defaultApp: $("fApp").value || null,
     createDirs: $("fCreateDirs").checked,
+    enableShots: $("fShots").checked,
     extraEnv: builderState.extraEnv.filter((r) => r.key),
     overwrite,
   };
@@ -530,5 +547,43 @@ function bindEnvActions() {
   });
 }
 
+// ---------------- new shot creation ----------------
+function bindNewShot() {
+  const btn = $("newShotBtn");
+  const input = $("newShotInput");
+
+  btn.addEventListener("click", () => {
+    input.hidden = !input.hidden;
+    if (!input.hidden) {
+      input.value = state.projectId ? `${state.projectId}_` : "";
+      input.focus();
+    }
+  });
+
+  input.addEventListener("keydown", async (e) => {
+    if (e.key === "Escape") {
+      input.hidden = true;
+      return;
+    }
+    if (e.key !== "Enter") return;
+    const code = input.value.trim();
+    if (!code) return;
+    const res = await window.launcher.shotCreate({ projectId: state.projectId, code });
+    if (!res.ok) {
+      toast(res.message, true);
+      return;
+    }
+    input.hidden = true;
+    // 一覧を更新して作成したショットを選択
+    state.shotCode = res.code;
+    state.detail = await window.launcher.getProjectDetail(state.projectId, res.code);
+    renderShotSelect();
+    renderScenes();
+    renderEnvStack();
+    toast(`Shot "${res.code}" created`);
+  });
+}
+
 bindBuilder();
 bindEnvActions();
+bindNewShot();

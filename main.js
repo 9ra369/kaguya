@@ -11,6 +11,7 @@ const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
+const os = require("os");
 const builder = require("./builder");
 
 // ------------------------------------------------------------
@@ -281,6 +282,37 @@ function listScenes(project, batchVars) {
   return { dir, missing: false, scenes };
 }
 
+// ------------------------------------------------------------
+// runtime 層のプレビュー (参照専用)
+//   Kaguya が set する変数ではなく、Houdini 自身が解決する変数。
+//   HFS は exe パスから、HOUDINI_USER_PREF_DIR はバージョンから予測する。
+// ------------------------------------------------------------
+function buildRuntimePreview(project, vars) {
+  const apps = readJsonSafe(path.join(CONFIG_DIR, "apps.json"), [], []);
+  const appDef = apps.find((a) => a.id === project.defaultApp) ?? apps[0];
+
+  let hfs = null;
+  if (appDef?.exe) {
+    // .../Houdini 21.0.440/bin/houdini.exe → .../Houdini 21.0.440
+    hfs = path.dirname(path.dirname(appDef.exe)).replace(/\\/g, "/");
+  }
+
+  let pref = process.env.HOUDINI_USER_PREF_DIR ?? null;
+  if (!pref && appDef?.version) {
+    const mm = appDef.version.split(".").slice(0, 2).join(".");
+    pref = path.join(os.homedir(), "Documents", `houdini${mm}`).replace(/\\/g, "/");
+  }
+
+  return [
+    { key: "HFS", value: hfs ?? "— set exe in config/apps.json —", dynamic: !hfs },
+    { key: "JOB", value: vars.JOB ?? "— undefined —", dynamic: !vars.JOB },
+    { key: "HIP", value: "scene directory — set when a scene opens", dynamic: true },
+    { key: "HIPNAME", value: "scene name (no ext) — set when a scene opens", dynamic: true },
+    { key: "HOUDINI_USER_PREF_DIR", value: pref ?? "— houdini default —", dynamic: !pref },
+    { key: "HOUDINI_PATH", value: "merged from packages at startup — verify with hconfig", dynamic: true },
+  ];
+}
+
 // ---------- IPC ----------
 function getProject(id) {
   const projects = readJsonSafe(path.join(CONFIG_DIR, "projects.json"), [], []);
@@ -332,6 +364,7 @@ ipcMain.handle("project:detail", (_e, projectId, shotCode) => {
     sceneInfo: listScenes(projForScenes, merged),
     shotInfo,
     activeShot: shot?.code ?? null,
+    runtime: buildRuntimePreview(project, merged),
     // ビルダー生成プロジェクトのメタ(§5.2 「環境変数」バッジ用)
     envJson:
       project.envJson && fs.existsSync(project.envJson) ? project.envJson : null,
@@ -393,6 +426,42 @@ ipcMain.handle("openFolder", (_e, rel) => {
 // 生成済み package JSON をエディタで開く / エクスプローラで表示 (§5.2)
 ipcMain.handle("openPathAbs", (_e, abs) => shell.openPath(abs));
 ipcMain.handle("showInFolder", (_e, abs) => shell.showItemInFolder(abs));
+
+// 新規ショット作成: shots/<code> と hip ディレクトリを生成
+ipcMain.handle("shot:create", (_e, { projectId, code }) => {
+  const project = getProject(projectId);
+  if (!project?.shots) return { ok: false, message: "This project has no shot configuration" };
+  if (project.shots.file)
+    return { ok: false, message: "Shots for this project are managed by a shots JSON file" };
+  if (!project.shots.dir)
+    return { ok: false, message: "shots.dir is not configured for this project" };
+  if (!/^[A-Za-z0-9_\-]+$/.test(code ?? ""))
+    return { ok: false, message: "Shot code may only contain letters, digits, _ and -" };
+
+  // ショット命名規約 (pattern) に合わないコードは一覧に出ないため弾く
+  if (project.shots.pattern) {
+    let re = null;
+    try { re = new RegExp(project.shots.pattern); } catch {}
+    if (re && !re.test(code))
+      return { ok: false, message: `Code does not match this project's shot pattern:\n${project.shots.pattern}` };
+  }
+
+  const baseVars = parseBatchEnv(path.join(ROOT, project.batch));
+  const merged = mergePackageVars(baseVars, collectPackagesPreview(baseVars));
+  const dir = expandPath(project.shots.dir, merged).replace(/[\\/]/g, path.sep);
+  const shotRoot = path.join(dir, code);
+  if (fs.existsSync(shotRoot)) return { ok: false, message: `Shot already exists: ${code}` };
+
+  fs.mkdirSync(shotRoot, { recursive: true });
+  if (project.hipDirShot) {
+    const hip = expandPath(project.hipDirShot, {
+      ...merged,
+      SHOT_ROOT: shotRoot.replace(/\\/g, "/"),
+    }).replace(/[\\/]/g, path.sep);
+    fs.mkdirSync(hip, { recursive: true });
+  }
+  return { ok: true, code };
+});
 
 // ---------- project environment builder (§6.1 IPC) ----------
 ipcMain.handle("builder:defaults", () => {
